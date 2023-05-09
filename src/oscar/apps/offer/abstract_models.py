@@ -976,14 +976,14 @@ class AbstractRange(models.Model):
             )
         # start with filter clause that always applies
         _filter = Q(includes=self)
-        # extend filter for included classes:
+        # extend filter if included classes exist:
         if self.classes.exists():
             _filter |= Q(product_class__classes=self)
             _filter |= Q(parent__product_class__classes=self)
         # extend filter if included_products have children
         if Product.objects.filter(parent__includes=self).exists():
             _filter |= Q(parent__includes=self)
-        # extend filter for included_categories
+        # extend filter if included_categories exist
         if self.included_categories.exists():
             expanded_range_categories = ExpandDownwardsCategoryQueryset(
                 self.included_categories.values("id")
