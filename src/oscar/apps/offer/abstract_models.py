@@ -974,6 +974,7 @@ class AbstractRange(models.Model):
             return Product.objects.exclude(
                 id__in=self.excluded_products.values("id")
             )
+        # start with filter clause that always applies
         _filter = Q(includes=self)
         # extend filter for included classes:
         if self.classes.exists():
