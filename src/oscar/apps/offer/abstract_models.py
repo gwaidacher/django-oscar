@@ -1050,9 +1050,7 @@ class AbstractRange(models.Model):
             return Product.objects.exclude(
                 id__in=self.excluded_products.values("id")
             )
-        # start with filter clause that always applies
         _filter = Q(includes=self)
-        _exclude_filter = Q(excludes=self)
         # extend filter for included classes:
         if self.classes.exists():
             _filter |= Q(product_class__classes=self)
@@ -1060,7 +1058,6 @@ class AbstractRange(models.Model):
         # extend filter if included_products have children
         if Product.objects.filter(parent__includes=self).exists():
             _filter |= Q(parent__includes=self)
-            _exclude_filter |= Q(parent__excludes=self)
         # extend filter for included_categories
         if self.included_categories.exists():
             expanded_range_categories = ExpandDownwardsCategoryQueryset(
@@ -1072,7 +1069,10 @@ class AbstractRange(models.Model):
                     parent__categories__in=expanded_range_categories).exists():
                 _filter |= Q(parent__categories__in=expanded_range_categories)
         return Product.objects.filter(
-            _filter).exclude(_exclude_filter).distinct()
+            _filter,
+            ~Q(excludes=self),
+            ~Q(parent__excludes=self)
+        ).distinct()
 
     @property
     def is_editable(self):
